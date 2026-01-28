@@ -6,485 +6,75 @@
     <title>Pediatric Cardiac Surgery助手</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫀</text></svg>">
     <style>
-        /* [所有CSS样式保持不变，为了简洁省略] */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-
-        .disclaimer {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            line-height: 1.6;
-        }
-
-        .disclaimer strong {
-            color: #856404;
-        }
-
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            background: transparent;
-            font-size: 1em;
-            font-weight: 500;
-        }
-
-        .tab:hover {
-            background: #e9ecef;
-        }
-
-        .tab.active {
-            background: white;
-            border-bottom: 3px solid #667eea;
-            color: #667eea;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 30px;
-            animation: fadeIn 0.3s;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* AI助手样式 */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 500px;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f8f9fa;
-        }
-
-        .message {
-            margin-bottom: 15px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            max-width: 80%;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-
-        .message.user {
-            background: #667eea;
-            color: white;
-            margin-left: auto;
-            text-align: right;
-        }
-
-        .message.assistant {
-            background: white;
-            border: 1px solid #dee2e6;
-        }
-
-        .chat-input-container {
-            display: flex;
-            gap: 10px;
-            padding: 15px;
-            background: white;
-            border-top: 1px solid #dee2e6;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #dee2e6;
-            border-radius: 25px;
-            font-size: 1em;
-            outline: none;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* 医学辞典样式 */
-        .dictionary-container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 15px;
-            border: 2px solid #dee2e6;
-            border-radius: 10px;
-            font-size: 1em;
-        }
-
-        .lang-selector {
-            padding: 15px;
-            border: 2px solid #dee2e6;
-            border-radius: 10px;
-            font-size: 1em;
-            cursor: pointer;
-        }
-
-        .translation-result {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            min-height: 200px;
-            margin-top: 20px;
-        }
-
-        .term-card {
-            background: white;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        /* 随访提醒样式 */
-        .reminder-form {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-
-        .reminder-list {
-            margin-top: 20px;
-        }
-
-        .reminder-item {
-            background: white;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .reminder-item.overdue {
-            border-left-color: #dc3545;
-        }
-
-        .reminder-item.upcoming {
-            border-left-color: #ffc107;
-        }
-
-        /* 参考资源样式 */
-        .resources {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .resources h3 {
-            margin-bottom: 15px;
-            color: #667eea;
-        }
-
-        .resources ul {
-            list-style: none;
-        }
-
-        .resources li {
-            padding: 10px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .resources a {
-            color: #667eea;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .resources a:hover {
-            color: #764ba2;
-            text-decoration: underline;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* 心跳加载动画 */
-        .typing-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 16px;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            max-width: 80px;
-        }
-
-        .typing-indicator .heart {
-            font-size: 24px;
-            animation: heartbeat 1.2s ease-in-out infinite;
-        }
-
-        .typing-indicator .dot {
-            width: 8px;
-            height: 8px;
-            background: #667eea;
-            border-radius: 50%;
-            animation: bounce 1.4s ease-in-out infinite;
-        }
-
-        .typing-indicator .dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-indicator .dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            10%, 30% { transform: scale(1.1); }
-            20%, 40% { transform: scale(1); }
-        }
-
-        @keyframes bounce {
-            0%, 60%, 100% { 
-                transform: translateY(0);
-                opacity: 0.7;
-            }
-            30% { 
-                transform: translateY(-10px);
-                opacity: 1;
-            }
-        }
-
-        /* 思考中动画 */
-        .thinking-animation {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 12px 16px;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-        }
-
-        .thinking-animation .bubble {
-            width: 10px;
-            height: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            animation: think 1.5s ease-in-out infinite;
-        }
-
-        .thinking-animation .bubble:nth-child(1) {
-            animation-delay: 0s;
-        }
-
-        .thinking-animation .bubble:nth-child(2) {
-            animation-delay: 0.3s;
-        }
-
-        .thinking-animation .bubble:nth-child(3) {
-            animation-delay: 0.6s;
-        }
-
-        @keyframes think {
-            0%, 100% {
-                transform: scale(0.8);
-                opacity: 0.5;
-            }
-            50% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-        }
-
-        .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-
-        /* TTS按钮样式改进 */
-        .tts-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2em;
-            opacity: 0.7;
-            transition: all 0.3s;
-            padding: 4px;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .tts-button:hover {
-            opacity: 1;
-            background-color: #f0f0f0;
-        }
-
-        .tts-button.speaking {
-            opacity: 1;
-            background-color: #e3f2fd;
-        }
-
-        .stop-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.1em;
-            opacity: 0.7;
-            transition: all 0.3s;
-            padding: 4px;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .stop-button:hover {
-            opacity: 1;
-            background-color: #ffebee;
-        }
-
-        /* 消息中的TTS容器 */
-        .tts-container {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 2em; margin-bottom: 10px; }
+        .disclaimer { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px; border-radius: 5px; font-size: 0.9em; line-height: 1.6; }
+        .disclaimer strong { color: #856404; }
+        .tabs { display: flex; background: #f8f9fa; border-bottom: 2px solid #dee2e6; }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s; border: none; background: transparent; font-size: 1em; font-weight: 500; }
+        .tab:hover { background: #e9ecef; }
+        .tab.active { background: white; border-bottom: 3px solid #667eea; color: #667eea; }
+        .tab-content { display: none; padding: 30px; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-container { display: flex; flex-direction: column; height: 500px; border: 1px solid #dee2e6; border-radius: 10px; overflow: hidden; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f8f9fa; }
+        .message { margin-bottom: 15px; padding: 12px 16px; border-radius: 10px; max-width: 80%; line-height: 1.5; word-wrap: break-word; }
+        .message.user { background: #667eea; color: white; margin-left: auto; text-align: right; }
+        .message.assistant { background: white; border: 1px solid #dee2e6; }
+        .chat-input-container { display: flex; gap: 10px; padding: 15px; background: white; border-top: 1px solid #dee2e6; }
+        .chat-input { flex: 1; padding: 12px; border: 1px solid #dee2e6; border-radius: 25px; font-size: 1em; outline: none; }
+        .btn { padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; font-size: 1em; font-weight: 500; transition: all 0.3s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .dictionary-container { max-width: 800px; margin: 0 auto; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-input { flex: 1; padding: 15px; border: 2px solid #dee2e6; border-radius: 10px; font-size: 1em; }
+        .lang-selector { padding: 15px; border: 2px solid #dee2e6; border-radius: 10px; font-size: 1em; cursor: pointer; }
+        .translation-result { background: #f8f9fa; padding: 20px; border-radius: 10px; min-height: 200px; margin-top: 20px; }
+        .term-card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #667eea; }
+        .reminder-form { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #dee2e6; border-radius: 5px; font-size: 1em; }
+        .reminder-list { margin-top: 20px; }
+        .reminder-item { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #28a745; display: flex; justify-content: space-between; align-items: center; }
+        .reminder-item.overdue { border-left-color: #dc3545; }
+        .reminder-item.upcoming { border-left-color: #ffc107; }
+        .resources { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px; }
+        .resources h3 { margin-bottom: 15px; color: #667eea; }
+        .resources ul { list-style: none; }
+        .resources li { padding: 10px 0; border-bottom: 1px solid #dee2e6; }
+        .resources a { color: #667eea; text-decoration: none; transition: color 0.3s; }
+        .resources a:hover { color: #764ba2; text-decoration: underline; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .typing-indicator { display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; background: white; border: 1px solid #dee2e6; border-radius: 10px; max-width: 80px; }
+        .typing-indicator .heart { font-size: 24px; animation: heartbeat 1.2s ease-in-out infinite; }
+        .typing-indicator .dot { width: 8px; height: 8px; background: #667eea; border-radius: 50%; animation: bounce 1.4s ease-in-out infinite; }
+        .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 10%, 30% { transform: scale(1.1); } 20%, 40% { transform: scale(1); } }
+        @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.7; } 30% { transform: translateY(-10px); opacity: 1; } }
+        .thinking-animation { display: inline-flex; align-items: center; gap: 4px; padding: 12px 16px; background: white; border: 1px solid #dee2e6; border-radius: 10px; }
+        .thinking-animation .bubble { width: 10px; height: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; animation: think 1.5s ease-in-out infinite; }
+        .thinking-animation .bubble:nth-child(1) { animation-delay: 0s; }
+        .thinking-animation .bubble:nth-child(2) { animation-delay: 0.3s; }
+        .thinking-animation .bubble:nth-child(3) { animation-delay: 0.6s; }
+        @keyframes think { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
+        .error-message { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .tts-button { background: none; border: none; cursor: pointer; font-size: 1.2em; opacity: 0.7; transition: all 0.3s; padding: 4px; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+        .tts-button:hover { opacity: 1; background-color: #f0f0f0; }
+        .tts-button.speaking { opacity: 1; background-color: #e3f2fd; }
+        .stop-button { background: none; border: none; cursor: pointer; font-size: 1.1em; opacity: 0.7; transition: all 0.3s; padding: 4px; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+        .stop-button:hover { opacity: 1; background-color: #ffebee; }
+        .tts-container { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -498,8 +88,6 @@
         <div class="disclaimer">
             <strong>⚠️ 免责声明 / Disclaimer:</strong><br>
             本系统提供的信息仅供临床婴幼儿心外科医生参考，不能代替专业医疗判断。所有临床决策必须结合患儿的具体情况、最新医学证据和医生的专业经验综合判断。使用本系统即表示您同意此免责声明。
-            <br><br>
-            <em>The information provided by this system is for reference by clinical pediatric cardiac surgeons only and cannot replace professional medical judgment. All clinical decisions must be made based on the specific conditions of the patient, latest medical evidence, and professional experience of physicians.</em>
         </div>
 
         <div class="tabs">
@@ -519,13 +107,8 @@
                 </div>
             </div>
             <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="color: #6c757d; font-size: 0.9em;">
-                    💡 提示：支持中文、英文、德语提问和回复<br>
-                    🎤 语音输入提问 | 🔊 点击消息按钮朗读 | ⏹️ 停止当前朗读
-                </div>
-                <button onclick="stopSpeaking()" class="btn btn-secondary" style="padding: 8px 16px;">
-                    🔇 停止所有朗读
-                </button>
+                <div style="color: #6c757d; font-size: 0.9em;">🎤 语音输入提问 | 🔊 点击消息按钮朗读 | ⏹️ 停止当前朗读</div>
+                <button onclick="stopSpeaking()" class="btn btn-secondary" style="padding: 8px 16px;">🔇 停止所有朗读</button>
             </div>
         </div>
 
@@ -551,22 +134,10 @@
             <h2 style="margin-bottom: 20px;">患者随访管理</h2>
             <div class="reminder-form">
                 <h3>添加随访提醒</h3>
-                <div class="form-group">
-                    <label>患者姓名/ID:</label>
-                    <input type="text" id="patientName" placeholder="输入患者标识">
-                </div>
-                <div class="form-group">
-                    <label>手术类型:</label>
-                    <input type="text" id="surgeryType" placeholder="例如：VSD修补术">
-                </div>
-                <div class="form-group">
-                    <label>随访日期:</label>
-                    <input type="date" id="followupDate">
-                </div>
-                <div class="form-group">
-                    <label>备注:</label>
-                    <textarea id="notes" rows="3" placeholder="随访注意事项..."></textarea>
-                </div>
+                <div class="form-group"><label>患者姓名/ID:</label><input type="text" id="patientName"></div>
+                <div class="form-group"><label>手术类型:</label><input type="text" id="surgeryType"></div>
+                <div class="form-group"><label>随访日期:</label><input type="date" id="followupDate"></div>
+                <div class="form-group"><label>备注:</label><textarea id="notes" rows="3"></textarea></div>
                 <button class="btn btn-primary" onclick="addReminder()">添加提醒</button>
             </div>
             <div class="reminder-list" id="reminderList"></div>
@@ -577,20 +148,8 @@
             <div class="resources">
                 <h3>🌍 国际顶尖儿童心脏中心</h3>
                 <ul>
-                    <li>🇩🇪 <a href="https://www.dhzc.charite.de/en/" target="_blank">Deutsches Herzzentrum der Charité (DHZC)</a> - 柏林夏里特心脏中心</li>
-                    <li>🇩🇪 <a href="https://www.dhzb.de" target="_blank">Deutsches Herzzentrum Berlin (DHZB)</a> - 德国柏林心脏中心</li>
-                    <li>🇩🇪 <a href="https://www.heidelberg-university-hospital.com" target="_blank">Heidelberg University Hospital</a> - 海德堡大学医院</li>
-                    <li>🇩🇪 <a href="https://www.lmu-klinikum.de" target="_blank">LMU Klinikum München</a> - 慕尼黑大学医院</li>
-                    <li>🇺🇸 <a href="https://www.texaschildrens.org/heart" target="_blank">Texas Children's Heart Center</a> - 德克萨斯儿童医院心脏中心</li>
-                    <li>🇺🇸 <a href="https://www.chop.edu/centers-programs/cardiac-center" target="_blank">Children's Hospital of Philadelphia - Cardiac Center</a> - 费城儿童医院心脏中心</li>
-                    <li>🇺🇸 <a href="https://www.childrenshospital.org/centers/heart-center" target="_blank">Boston Children's Hospital - Heart Center</a> - 波士顿儿童医院心脏中心</li>
-                </ul>
-                
-                <h3 style="margin-top: 25px;">🇨🇳 中国主要儿童心脏中心</h3>
-                <ul>
-                    <li><a href="https://www.scmc.com.cn/list/1404/2617.html" target="_blank">上海交通大学医学院附属上海儿童医学中心 - 心胸外科</a></li>
-                    <li><a href="https://www.fuwaihospital.org/Departments/Main/Detail/60" target="_blank">中国医学科学院阜外医院 - 小儿心脏外科中心</a></li>
-                    <li><a href="https://www.301hospital.com.cn/hospital/sixth/xexzwk.html" target="_blank">中国人民解放军总医院(301医院) - 小儿心脏外科</a></li>
+                    <li>🇩🇪 <a href="https://www.dhzc.charite.de/en/" target="_blank">DHZC - 柏林夏里特心脏中心</a></li>
+                    <li>🇺🇸 <a href="https://www.chop.edu/centers-programs/cardiac-center" target="_blank">CHOP - 费城儿童医院</a></li>
                 </ul>
             </div>
         </div>
@@ -598,8 +157,6 @@
 
     <script>
         'use strict';
-        
-        // 全局变量
         let chatHistory = [];
         let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
         let recognition = null;
@@ -607,635 +164,167 @@
         let isCurrentlySpeaking = false;
         let currentUtterance = null;
 
-        // 标签切换
         window.switchTab = function(index) {
             const tabs = document.querySelectorAll('.tab');
             const contents = document.querySelectorAll('.tab-content');
-            
-            tabs.forEach((tab, i) => {
-                tab.classList.toggle('active', i === index);
-            });
-            
-            contents.forEach((content, i) => {
-                content.classList.toggle('active', i === index);
-            });
-
-            if (index === 2) {
-                displayReminders();
-            }
+            tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+            contents.forEach((content, i) => content.classList.toggle('active', i === index));
+            if (index === 2) displayReminders();
         };
 
-        // 简化但准确的语言检测函数
         function detectLanguage(text) {
-            if (!text || !text.trim()) return 'en-US';
-            
-            const cleanText = text.trim();
-            const lowerText = cleanText.toLowerCase();
-            
-            // 1. 中文检测 - 最简单直接
-            const chineseRegex = /[\u4e00-\u9fa5]/;
-            if (chineseRegex.test(cleanText)) {
-                return 'zh-CN';
-            }
-            
-            // 2. 德语检测 - 基于明确特征
-            // 德语特殊字符是最明确的指示
-            const germanSpecialChars = /[äöüßÄÖÜ]/;
-            if (germanSpecialChars.test(cleanText)) {
-                return 'de-DE';
-            }
-            
-            // 3. 检查明确的德语关键词（避免与英语混淆）
-            const unambiguousGermanWords = [
-                'brauchen', 'angeborene', 'herzfehler', 'kleinkindern', 
-                'und', 'der', 'die', 'das', 'ein', 'eine', 'einer', 'eines',
-                'ist', 'sind', 'haben', 'werden', 'können', 'müssen',
-                'mit', 'von', 'für', 'auf', 'bei', 'durch',
-                'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'Sie'
-            ];
-            
-            let germanScore = 0;
-            unambiguousGermanWords.forEach(word => {
-                // 使用单词边界确保匹配完整单词
-                const regex = new RegExp('\\b' + word + '\\b', 'gi');
-                const matches = cleanText.match(regex);
-                if (matches) {
-                    germanScore += matches.length;
-                }
-            });
-            
-            // 4. 检查英语关键词
-            const englishWords = [
-                'the', 'and', 'is', 'are', 'to', 'in', 'of', 'for', 'with', 'on',
-                'a', 'an', 'this', 'that', 'it', 'he', 'she', 'they',
-                'have', 'has', 'do', 'does', 'can', 'will', 'should',
-                'what', 'how', 'where', 'when', 'why', 'who'
-            ];
-            
-            let englishScore = 0;
-            englishWords.forEach(word => {
-                const regex = new RegExp('\\b' + word + '\\b', 'gi');
-                const matches = cleanText.match(regex);
-                if (matches) {
-                    englishScore += matches.length;
-                }
-            });
-            
-            // 5. 判断逻辑
-            // 如果有德语特殊字符，一定是德语
-            if (germanSpecialChars.test(cleanText)) {
-                return 'de-DE';
-            }
-            
-            // 如果德语分数明显高于英语分数，判定为德语
-            if (germanScore > 0 && germanScore > englishScore) {
-                // 但需要确保不是英语误判
-                // 检查是否有明显的英语结构
-                const hasEnglishStructure = 
-                    /\bthe\b/i.test(cleanText) || 
-                    /\band\b/i.test(cleanText) ||
-                    /\bis\b/i.test(cleanText) ||
-                    /\bare\b/i.test(cleanText);
-                
-                if (!hasEnglishStructure || germanScore >= 3) {
-                    return 'de-DE';
-                }
-            }
-            
-            // 6. 默认英语
+            if (!text) return 'en-US';
+            if (/[\u4e00-\u9fa5]/.test(text)) return 'zh-CN';
+            const deWords = /\b(der|die|das|ein|und|ist|herz|chirurgie|kinder)\b/i;
+            if (/[äöüßÄÖÜ]/.test(text) || deWords.test(text)) return 'de-DE';
             return 'en-US';
         }
 
-        // AI助手功能 - 修复语言匹配问题
         window.sendMessage = async function() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
-            
             if (!message) return;
 
             addMessage(message, 'user');
             input.value = '';
-
-            // 添加思考动画
             const thinkingId = addThinkingAnimation();
-
             const sendBtn = document.getElementById('sendBtn');
             sendBtn.disabled = true;
-            sendBtn.innerHTML = '<span class="loading"></span>';
 
-            // 检测用户提问的语言
             const userLang = detectLanguage(message);
-            console.log('检测到的用户语言:', userLang, '消息:', message);
-            
-            let systemPrompt = '';
-            let targetLang = '';
-            let userMessageWithLang = message;
-            
-            // 根据检测到的用户语言设置回复语言
+            let systemPrompt = "You are a pediatric cardiac surgery assistant.";
+            let userPrompt = message;
+
             if (userLang === 'zh-CN') {
-                // 中文用户
-                systemPrompt = `你是一位专业的小儿心脏外科医生助手。用户使用中文提问，请务必使用中文进行回复。回复应当专业且简洁。提醒：所有建议仅供参考，不能代替医生判断。`;
-                targetLang = 'zh';
-                userMessageWithLang = `${message}（请用中文回答）`;
-                
+                systemPrompt = "你是一位专业的小儿心脏外科助手，请用中文回答。";
+                userPrompt += " (Bitte auf Chinesisch antworten)";
             } else if (userLang === 'de-DE') {
-                // 德语用户 - 强化德语指令，防止退回英语
-                systemPrompt = `Sie sind ein hochqualifizierter Assistent für pädiatrische Herzchirurgie. Da der Benutzer auf Deutsch fragt, müssen Sie AUSSCHLIESSLICH auf Deutsch antworten. Erklären Sie medizinische Sachverhalte präzise. Hinweis: Alle Ratschläge dienen nur als Referenz und ersetzen keine ärztliche Beurteilung.`;
-                targetLang = 'de';
-                userMessageWithLang = `${message} (BITTE ANTWORTEN SIE NUR AUF DEUTSCH)`;
-                
-            } else {
-                // 英语用户
-                systemPrompt = `You are a professional pediatric cardiac surgery assistant. The user asks in English, reply in English. Note: For reference only, not a substitute for professional medical judgment.`;
-                targetLang = 'en';
-                userMessageWithLang = `${message} (Please reply in English)`;
+                systemPrompt = "Sie sind ein professioneller Assistent für Kinderherzchirurgie. Antworten Sie BITTE NUR auf DEUTSCH.";
+                userPrompt += " (Bitte auf Deutsch antworten)";
             }
 
             try {
-                console.log('发送请求到AI服务...', {
-                    userLang: userLang,
-                    targetLang: targetLang,
-                    message: message
-                });
-
                 const response = await fetch('/.netlify/functions/chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: 'deepseek-chat',
-                        messages: [
-                            {
-                                role: 'system',
-                                content: systemPrompt
-                            },
-                            ...chatHistory,
-                            { 
-                                role: 'user', 
-                                content: userMessageWithLang
-                            }
-                        ],
-                        temperature: 0.3,
-                        max_tokens: 1000
+                        messages: [{ role: 'system', content: systemPrompt }, ...chatHistory, { role: 'user', content: userPrompt }],
+                        temperature: 0.3
                     })
                 });
-
-                console.log('API响应状态:', response.status);
-                
-                // 移除思考动画
                 removeThinkingAnimation(thinkingId);
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('API错误详情:', errorText);
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
                 const data = await response.json();
-                console.log('API响应数据:', data);
-                
                 const reply = data.choices[0].message.content;
-                
-                // 检查回复是否使用了正确的语言
-                const replyLang = detectLanguage(reply);
-                console.log('AI回复语言检测:', replyLang);
-                
-                chatHistory.push({ role: 'user', content: message });
-                chatHistory.push({ role: 'assistant', content: reply });
-
-                // 不自动朗读，只显示消息
+                chatHistory.push({ role: 'user', content: message }, { role: 'assistant', content: reply });
                 addMessage(reply, 'assistant');
             } catch (error) {
-                console.error('完整错误信息:', error);
                 removeThinkingAnimation(thinkingId);
-                
-                // 根据用户语言提供错误信息
-                let errorMsg = '';
-                if (userLang === 'zh-CN') {
-                    errorMsg = `抱歉，连接AI服务时出现错误：${error.message}。这可能是因为：<br>
-                    1. DeepSeek API密钥未配置<br>
-                    2. 网络连接问题<br>
-                    3. 服务器暂时不可用<br><br>
-                    请检查Netlify环境变量中的DEEPSEEK_API_KEY设置。`;
-                } else if (userLang === 'de-DE') {
-                    errorMsg = `Entschuldigung, beim Verbinden mit dem KI-Dienst ist ein Fehler aufgetreten: ${error.message}. Mögliche Ursachen:<br>
-                    1. DeepSeek API-Schlüssel nicht konfiguriert<br>
-                    2. Netzwerkverbindungsproblem<br>
-                    3. Server vorübergehend nicht verfügbar<br><br>
-                    Bitte überprüfen Sie die DEEPSEEK_API_KEY-Umgebungsvariable in Netlify.`;
-                } else {
-                    errorMsg = `Sorry, an error occurred while connecting to the AI service: ${error.message}. Possible causes:<br>
-                    1. DeepSeek API key not configured<br>
-                    2. Network connection issue<br>
-                    3. Server temporarily unavailable<br><br>
-                    Please check the DEEPSEEK_API_KEY environment variable in Netlify.`;
-                }
-                
-                addMessage(errorMsg, 'assistant');
+                addMessage("Error: " + error.message, 'assistant');
             } finally {
                 sendBtn.disabled = false;
-                sendBtn.innerHTML = '发送';
             }
-        }
+        };
 
         function addThinkingAnimation() {
             const messagesDiv = document.getElementById('chatMessages');
-            const thinkingDiv = document.createElement('div');
-            const thinkingId = 'thinking-' + Date.now();
-            thinkingDiv.id = thinkingId;
-            thinkingDiv.className = 'message assistant';
-            thinkingDiv.innerHTML = `
-                <div class="thinking-animation">
-                    <div class="bubble"></div>
-                    <div class="bubble"></div>
-                    <div class="bubble"></div>
-                </div>
-            `;
-            messagesDiv.appendChild(thinkingDiv);
+            const id = 'think-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id; div.className = 'message assistant';
+            div.innerHTML = '<div class="thinking-animation"><div class="bubble"></div><div class="bubble"></div><div class="bubble"></div></div>';
+            messagesDiv.appendChild(div);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            return thinkingId;
+            return id;
         }
 
-        function removeThinkingAnimation(thinkingId) {
-            const thinkingDiv = document.getElementById(thinkingId);
-            if (thinkingDiv) {
-                thinkingDiv.remove();
-            }
+        function removeThinkingAnimation(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
         }
 
         function addMessage(text, sender) {
             const messagesDiv = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            
-            // 检测消息语言 - 这里要确保准确
-            const msgLang = detectLanguage(text);
-            console.log('TTS语言检测:', msgLang, '文本:', text.substring(0, 50));
-            
-            const langCode = msgLang.split('-')[0];
-            const langBadge = {
-                'zh': '🇨🇳',
-                'de': '🇩🇪',
-                'en': '🇺🇸'
-            }[langCode] || '';
-            
-            // 为消息添加TTS功能
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
             const textSpan = document.createElement('span');
             textSpan.textContent = text;
-            
-            // 创建TTS按钮容器
-            const ttsContainer = document.createElement('div');
-            ttsContainer.className = 'tts-container';
-            
-            // 创建朗读按钮
-            const ttsBtn = document.createElement('button');
-            ttsBtn.className = 'tts-button';
-            ttsBtn.innerHTML = '🔊' + langBadge;
-            ttsBtn.title = '点击朗读（' + msgLang + '）';
-            
-            // 创建停止按钮
-            const stopBtn = document.createElement('button');
-            stopBtn.className = 'stop-button';
-            stopBtn.innerHTML = '⏹️';
-            stopBtn.title = '停止朗读';
-            stopBtn.style.display = 'none';
-            
-            // 当前是否在朗读的标志（针对这条消息）
-            let isThisMessageSpeaking = false;
-            
-            // 朗读按钮点击事件 - 确保使用正确的语言
-            ttsBtn.onclick = () => {
-                if (isThisMessageSpeaking) {
-                    // 如果正在朗读，点击停止
-                    stopSpeaking();
-                    ttsBtn.innerHTML = '🔊' + langBadge;
-                    ttsBtn.classList.remove('speaking');
-                    stopBtn.style.display = 'none';
-                    isThisMessageSpeaking = false;
-                } else {
-                    // 如果未在朗读，先停止其他所有朗读
-                    stopSpeaking();
-                    
-                    // 开始朗读这条消息，使用检测到的正确语言
-                    speakText(text, msgLang); // 明确传递检测到的语言
-                    ttsBtn.innerHTML = '🔉' + langBadge;
-                    ttsBtn.classList.add('speaking');
-                    stopBtn.style.display = 'inline-flex';
-                    isThisMessageSpeaking = true;
-                    
-                    // 监听朗读结束事件
-                    if (currentUtterance) {
-                        currentUtterance.onend = () => {
-                            ttsBtn.innerHTML = '🔊' + langBadge;
-                            ttsBtn.classList.remove('speaking');
-                            stopBtn.style.display = 'none';
-                            isThisMessageSpeaking = false;
-                            isCurrentlySpeaking = false;
-                            currentUtterance = null;
-                        };
-                        
-                        currentUtterance.onerror = () => {
-                            ttsBtn.innerHTML = '🔊' + langBadge;
-                            ttsBtn.classList.remove('speaking');
-                            stopBtn.style.display = 'none';
-                            isThisMessageSpeaking = false;
-                            isCurrentlySpeaking = false;
-                            currentUtterance = null;
-                        };
-                    }
-                }
-            };
-            
-            // 停止按钮点击事件
-            stopBtn.onclick = () => {
-                stopSpeaking();
-                ttsBtn.innerHTML = '🔊' + langBadge;
-                ttsBtn.classList.remove('speaking');
-                stopBtn.style.display = 'none';
-                isThisMessageSpeaking = false;
-            };
-            
-            // 组装组件
-            ttsContainer.appendChild(ttsBtn);
-            ttsContainer.appendChild(stopBtn);
-            
-            messageDiv.appendChild(textSpan);
+            div.appendChild(textSpan);
+
             if (sender === 'assistant') {
-                messageDiv.appendChild(ttsContainer);
+                const lang = detectLanguage(text);
+                const btn = document.createElement('button');
+                btn.className = 'tts-button';
+                btn.innerHTML = '🔊';
+                btn.onclick = () => speakText(text, lang);
+                div.appendChild(btn);
             }
-            
-            messagesDiv.appendChild(messageDiv);
+            messagesDiv.appendChild(div);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        window.handleKeyPress = function(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        }
+        window.handleKeyPress = (e) => { if (e.key === 'Enter') sendMessage(); };
 
-        // 语音输入
         window.startVoiceInput = function() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('您的浏览器不支持语音识别功能');
-                return;
-            }
-
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert("不支持语音识别");
             recognition = new SpeechRecognition();
             recognition.lang = 'zh-CN';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            const voiceBtn = document.getElementById('voiceBtn');
-            voiceBtn.innerHTML = '🎤 录音中...';
-            voiceBtn.disabled = true;
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('chatInput').value = transcript;
-            };
-
-            recognition.onerror = (event) => {
-                console.error('语音识别错误:', event.error);
-                if (event.error === 'no-speech') {
-                    alert('未检测到语音，请重试');
-                } else {
-                    alert('语音识别失败，请重试');
-                }
-            };
-
-            recognition.onend = () => {
-                voiceBtn.innerHTML = '🎤 语音';
-                voiceBtn.disabled = false;
-            };
-
+            recognition.onresult = (e) => { document.getElementById('chatInput').value = e.results[0][0].transcript; };
             recognition.start();
-        }
+        };
 
-        // 文字转语音 - 使用明确传递的语言
-        function speakText(text, forcedLang = null) {
-            if (!text || !text.trim()) return;
-            
-            if (isCurrentlySpeaking) {
-                stopSpeaking();
-            }
-
-            // 清理文本
-            const cleanedText = cleanTextForSpeech(text);
-            
-            if (!cleanedText.trim()) {
-                console.log('清理后文本为空，跳过朗读');
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(cleanedText);
-            currentUtterance = utterance;
-            
-            // 使用强制传递的语言，或者检测语言
-            let detectedLang = forcedLang;
-            if (!detectedLang) {
-                detectedLang = detectLanguage(cleanedText);
-            }
-            
-            console.log('TTS使用语言:', detectedLang);
-            utterance.lang = detectedLang;
-            
-            // 根据语言调整语速
-            if (detectedLang === 'de-DE') {
-                utterance.rate = 0.85;
-            } else if (detectedLang === 'en-US') {
-                utterance.rate = 0.9;
-            } else {
-                utterance.rate = 0.9;
-            }
-            
-            utterance.pitch = 1;
-            utterance.volume = 1;
-            
-            // 朗读完成后的反馈
-            utterance.onend = () => {
-                console.log('朗读完成，语言:', detectedLang);
-                isCurrentlySpeaking = false;
-                currentUtterance = null;
-                
-                // 重置所有TTS按钮状态
-                resetAllTTSButtons();
-            };
-            
-            utterance.onerror = (event) => {
-                console.error('朗读出错:', event);
-                isCurrentlySpeaking = false;
-                currentUtterance = null;
-                
-                // 出错时也重置按钮状态
-                resetAllTTSButtons();
-            };
-            
+        function speakText(text, lang) {
+            synthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text.replace(/[*#`]/g, ''));
+            utterance.lang = lang;
+            utterance.rate = 0.9;
             synthesis.speak(utterance);
-            isCurrentlySpeaking = true;
         }
 
-        // 重置所有TTS按钮状态
-        function resetAllTTSButtons() {
-            const ttsButtons = document.querySelectorAll('.tts-button');
-            ttsButtons.forEach(btn => {
-                const originalHtml = btn.innerHTML;
-                if (originalHtml.includes('🔉')) {
-                    const langBadge = originalHtml.replace('🔉', '').trim();
-                    btn.innerHTML = '🔊' + langBadge;
-                    btn.classList.remove('speaking');
-                }
-            });
-            
-            const stopButtons = document.querySelectorAll('.stop-button');
-            stopButtons.forEach(btn => {
-                btn.style.display = 'none';
-            });
-        }
+        window.stopSpeaking = () => synthesis.cancel();
 
-        // 清理文本用于语音播放
-        function cleanTextForSpeech(text) {
-            let cleaned = text;
-            
-            // 移除Markdown格式符号
-            cleaned = cleaned.replace(/\*\*/g, '');
-            cleaned = cleaned.replace(/\*/g, '');
-            cleaned = cleaned.replace(/~~(.+?)~~/g, '$1');
-            cleaned = cleaned.replace(/`([^`]+)`/g, '$1');
-            cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
-            cleaned = cleaned.replace(/#{1,6}\s*/g, '');
-            cleaned = cleaned.replace(/^\s*[-*+]\s+/gm, '');
-            cleaned = cleaned.replace(/^\s*\d+\.\s+/gm, '');
-            cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-            
-            // 清理多余空格和换行
-            cleaned = cleaned.replace(/\n\s*\n/g, '。');
-            cleaned = cleaned.replace(/\n/g, '，');
-            cleaned = cleaned.replace(/\s+/g, ' ');
-            cleaned = cleaned.trim();
-            
-            return cleaned;
-        }
-
-        // 停止所有语音播放
-        window.stopSpeaking = function() {
-            if (synthesis.speaking) {
-                synthesis.cancel();
-                console.log('已停止朗读');
-            }
-            
-            isCurrentlySpeaking = false;
-            currentUtterance = null;
-            
-            // 重置所有TTS按钮状态
-            resetAllTTSButtons();
-        }
-
-        // 医学辞典功能
         window.translateTerm = async function() {
             const input = document.getElementById('dictInput').value.trim();
-            const sourceLang = document.getElementById('sourceLang').value;
-            const resultDiv = document.getElementById('translationResult');
-
-            if (!input) {
-                resultDiv.innerHTML = '<p style="color: #dc3545;">请输入要翻译的术语</p>';
-                return;
-            }
-
-            resultDiv.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <div class="typing-indicator" style="margin: 0 auto;">
-                        <span class="heart">💙</span>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
-                    <p style="margin-top: 15px; color: #667eea;">正在翻译中...</p>
-                </div>
-            `;
-
+            const lang = document.getElementById('sourceLang').value;
+            const resDiv = document.getElementById('translationResult');
+            if (!input) return;
+            resDiv.innerHTML = "正在翻译...";
             try {
                 const response = await fetch('/.netlify/functions/translate', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        term: input,
-                        sourceLang: sourceLang
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ term: input, sourceLang: lang })
                 });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-
                 const data = await response.json();
-                const translation = data.choices[0].message.content;
+                const result = data.choices[0].message.content;
+                resDiv.innerHTML = `<div class="term-card"><h3>结果</h3><p id="tResultText">${result}</p><button class="btn btn-secondary" onclick="speakText(document.getElementById('tResultText').textContent, 'zh-CN')">朗读</button></div>`;
+            } catch (e) { resDiv.innerHTML = "翻译出错"; }
+        };
 
-                resultDiv.innerHTML = `
-                    <div class="term-card">
-                        <h3>📖 翻译结果</h3>
-                        <div style="white-space: pre-wrap; line-height: 1.8; padding: 10px; background: white; border-radius: 5px;" id="translationText">${translation}</div>
-                        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button onclick="speakTranslationText('${translation.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="padding: 8px 16px;">
-                                🔊 自动识别朗读
-                            </button>
-                            <button onclick="speakTranslation('zh-CN')" class="btn btn-secondary" style="padding: 8px 16px;">
-                                🔊 中文朗读
-                            </button>
-                            <button onclick="speakTranslation('en-US')" class="btn btn-secondary" style="padding: 8px 16px;">
-                                🔊 English
-                            </button>
-                            <button onclick="speakTranslation('de-DE')" class="btn btn-secondary" style="padding: 8px 16px;">
-                                🔊 Deutsch
-                            </button>
-                        </div>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('翻译错误:', error);
-                resultDiv.innerHTML = '<p class="error-message">翻译失败：' + error.message + '</p>';
-            }
+        window.addReminder = function() {
+            const name = document.getElementById('patientName').value;
+            const date = document.getElementById('followupDate').value;
+            if (!name || !date) return alert("请填写完整");
+            reminders.push({ id: Date.now(), name, date, type: document.getElementById('surgeryType').value });
+            localStorage.setItem('reminders', JSON.stringify(reminders));
+            displayReminders();
+        };
+
+        function displayReminders() {
+            const list = document.getElementById('reminderList');
+            list.innerHTML = reminders.map(r => `<div class="reminder-item"><div><strong>${r.name}</strong> - ${r.date}</div><button onclick="deleteReminder(${r.id})">删除</button></div>`).join('');
         }
 
-        // 翻译结果朗读（指定语言）
-        window.speakTranslation = function(lang) {
-            const translationDiv = document.getElementById('translationText');
-            if (!translationDiv) return;
+        window.deleteReminder = (id) => {
+            reminders = reminders.filter(r => r.id !== id);
+            localStorage.setItem('reminders', JSON.stringify(reminders));
+            displayReminders();
+        };
 
-            const text = translationDiv.textContent;
-            if (!text.trim()) return;
-
-            if (isCurrentlySpeaking) {
-                stopSpeaking();
-            }
-
-            // 清理文本
-            const cleanedText = cleanTextForSpeech(text);
-            
-            if (!cleanedText.trim()) {
-                console.log('清理后文本为空，跳过朗读');
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(cleanedText);
-            currentUtterance = utterance;
-            utterance.lang = lang;
-            
-            // 根据语言调整语速
-            if (lang === 'de-DE') {
-                utterance.rate = 0.85;
-            } else if (lang === 'en-US') {
-                utterance.rate = 0.9;
-            } else {
-                utterance.rate = 0.9;
-            }
-            
-            utterance.pitch = 1;
-            utterance.volume = 1;
-            
-            utterance.on
+        document.addEventListener('DOMContentLoaded', () => {
+            addMessage("您好！我是小儿心脏外科智能助手。我可以为您提供专业咨询和翻译支持。", 'assistant');
+            displayReminders();
+        });
+    </script>
+</body>
+</html>
