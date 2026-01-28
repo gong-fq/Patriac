@@ -6,6 +6,7 @@
     <title>Pediatric Cardiac Surgery助手</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🫀</text></svg>">
     <style>
+        /* [所有CSS样式保持不变，为了简洁省略] */
         * {
             margin: 0;
             padding: 0;
@@ -628,104 +629,55 @@
             }
         };
 
-        // 修复的语言检测函数 - 重点修复德语检测
+        // 简化但准确的语言检测函数
         function detectLanguage(text) {
             if (!text || !text.trim()) return 'en-US';
             
             const cleanText = text.trim();
+            const lowerText = cleanText.toLowerCase();
             
-            // 1. 中文检测（最简单直接）
+            // 1. 中文检测 - 最简单直接
             const chineseRegex = /[\u4e00-\u9fa5]/;
             if (chineseRegex.test(cleanText)) {
                 return 'zh-CN';
             }
             
-            // 2. 德语检测 - 优先处理您的具体问题
-            const lowerText = cleanText.toLowerCase();
-            
-            // 检测德语特殊字符
+            // 2. 德语检测 - 基于明确特征
+            // 德语特殊字符是最明确的指示
             const germanSpecialChars = /[äöüßÄÖÜ]/;
-            const hasGermanChars = germanSpecialChars.test(cleanText);
+            if (germanSpecialChars.test(cleanText)) {
+                return 'de-DE';
+            }
             
-            // 您的具体问题中的关键词
-            const specificGermanKeywords = [
-                'brauchen', 'angeborene', 'herzfehler', 'kleinkindern', 'operation',
-                'herz', 'fehler', 'kinder', 'op', 'chirurgie', 'medizin'
+            // 3. 检查明确的德语关键词（避免与英语混淆）
+            const unambiguousGermanWords = [
+                'brauchen', 'angeborene', 'herzfehler', 'kleinkindern', 
+                'und', 'der', 'die', 'das', 'ein', 'eine', 'einer', 'eines',
+                'ist', 'sind', 'haben', 'werden', 'können', 'müssen',
+                'mit', 'von', 'für', 'auf', 'bei', 'durch',
+                'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'Sie'
             ];
             
-            // 常见德语词汇
-            const commonGermanWords = [
-                'und', 'der', 'die', 'das', 'ein', 'eine', 'einer', 'eines', 'einem', 'einen',
-                'ist', 'sind', 'haben', 'werden', 'können', 'müssen', 'sollen', 'wollen',
-                'mit', 'von', 'für', 'auf', 'bei', 'durch', 'über', 'unter', 'zwischen',
-                'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'Sie',
-                'nicht', 'auch', 'oder', 'aber', 'denn', 'weil', 'wenn', 'obwohl',
-                'was', 'wie', 'wo', 'warum', 'wann', 'wer', 'welche', 'welcher', 'welches'
-            ];
-            
-            // 合并所有德语关键词
-            const allGermanKeywords = [...specificGermanKeywords, ...commonGermanWords];
-            
-            // 计算德语分数
             let germanScore = 0;
-            allGermanKeywords.forEach(keyword => {
+            unambiguousGermanWords.forEach(word => {
                 // 使用单词边界确保匹配完整单词
-                const regex = new RegExp('\\b' + keyword + '\\b', 'gi');
+                const regex = new RegExp('\\b' + word + '\\b', 'gi');
                 const matches = cleanText.match(regex);
                 if (matches) {
                     germanScore += matches.length;
                 }
             });
             
-            // 检测德语动词形式
-            const germanVerbPatterns = [
-                'braucht', 'brauchen', 'macht', 'machen', 'geht', 'gehen', 'kommt', 'kommen',
-                'fragt', 'fragen', 'antwortet', 'antworten', 'weiß', 'wissen', 'kann', 'können'
-            ];
-            
-            let hasGermanVerb = false;
-            germanVerbPatterns.forEach(verb => {
-                if (lowerText.includes(verb)) {
-                    hasGermanVerb = true;
-                }
-            });
-            
-            // 德语判断逻辑
-            // 情况1：有德语特殊字符
-            if (hasGermanChars) {
-                return 'de-DE';
-            }
-            
-            // 情况2：包含您的具体问题关键词
-            const hasSpecificGerman = specificGermanKeywords.some(keyword => 
-                lowerText.includes(keyword)
-            );
-            
-            if (hasSpecificGerman) {
-                return 'de-DE';
-            }
-            
-            // 情况3：有德语动词且德语分数较高
-            if (hasGermanVerb && germanScore >= 2) {
-                return 'de-DE';
-            }
-            
-            // 情况4：德语分数足够高
-            if (germanScore >= 3) {
-                return 'de-DE';
-            }
-            
-            // 3. 英语检测
-            // 常见英语单词
-            const commonEnglishWords = [
-                'the', 'and', 'is', 'are', 'to', 'in', 'of', 'for', 'with', 'on', 'at', 'by',
-                'a', 'an', 'this', 'that', 'these', 'those', 'it', 'he', 'she', 'they',
-                'have', 'has', 'do', 'does', 'can', 'could', 'will', 'would', 'should',
-                'what', 'how', 'where', 'when', 'why', 'who', 'which'
+            // 4. 检查英语关键词
+            const englishWords = [
+                'the', 'and', 'is', 'are', 'to', 'in', 'of', 'for', 'with', 'on',
+                'a', 'an', 'this', 'that', 'it', 'he', 'she', 'they',
+                'have', 'has', 'do', 'does', 'can', 'will', 'should',
+                'what', 'how', 'where', 'when', 'why', 'who'
             ];
             
             let englishScore = 0;
-            commonEnglishWords.forEach(word => {
+            englishWords.forEach(word => {
                 const regex = new RegExp('\\b' + word + '\\b', 'gi');
                 const matches = cleanText.match(regex);
                 if (matches) {
@@ -733,36 +685,28 @@
                 }
             });
             
-            // 如果英语分数远高于德语分数，判定为英语
-            if (englishScore > germanScore * 2) {
-                return 'en-US';
+            // 5. 判断逻辑
+            // 如果有德语特殊字符，一定是德语
+            if (germanSpecialChars.test(cleanText)) {
+                return 'de-DE';
             }
             
-            // 4. 默认：如果有疑问，检查文本长度和结构
-            // 短文本且包含问号，更可能是德语（因为您的例子是德语问句）
-            if (cleanText.includes('?') && cleanText.length < 100) {
-                // 检查是否是德语疑问句模式
-                const germanQuestionPatterns = [
-                    /brauchen\s+.+\?/i,
-                    /sind\s+.+\?/i,
-                    /haben\s+.+\?/i,
-                    /können\s+.+\?/i,
-                    /müssen\s+.+\?/i,
-                    /wie\s+.+\?/i,
-                    /was\s+.+\?/i,
-                    /warum\s+.+\?/i,
-                    /wo\s+.+\?/i,
-                    /wann\s+.+\?/i
-                ];
+            // 如果德语分数明显高于英语分数，判定为德语
+            if (germanScore > 0 && germanScore > englishScore) {
+                // 但需要确保不是英语误判
+                // 检查是否有明显的英语结构
+                const hasEnglishStructure = 
+                    /\bthe\b/i.test(cleanText) || 
+                    /\band\b/i.test(cleanText) ||
+                    /\bis\b/i.test(cleanText) ||
+                    /\bare\b/i.test(cleanText);
                 
-                for (const pattern of germanQuestionPatterns) {
-                    if (pattern.test(cleanText)) {
-                        return 'de-DE';
-                    }
+                if (!hasEnglishStructure || germanScore >= 3) {
+                    return 'de-DE';
                 }
             }
             
-            // 5. 最终默认值
+            // 6. 默认英语
             return 'en-US';
         }
 
@@ -794,51 +738,21 @@
             // 根据检测到的用户语言设置回复语言
             if (userLang === 'zh-CN') {
                 // 中文用户
-                systemPrompt = `你是一名专业的小儿心脏外科医生助手。用户用中文提问，你必须只用中文回复。
-                
-要求：
-1. 语言：只用中文，不要使用任何英语或德语
-2. 内容：专业、准确、简洁
-3. 提醒：本建议仅供参考，不能替代专业医疗判断
-4. 禁止：不要提供其他语言的翻译
-5. 领域：专注于小儿心脏外科专业
-
-请用中文回答用户的问题。`;
+                systemPrompt = `你是专业的小儿心脏外科医生助手。用户用中文提问，请用中文简洁专业地回答。提醒：建议仅供参考，不能替代医生判断。`;
                 targetLang = 'zh';
                 userMessageWithLang = `${message}（请用中文回答）`;
                 
             } else if (userLang === 'de-DE') {
-                // 德语用户 - 强制德语回复
-                systemPrompt = `Sie sind ein professioneller Assistent für pädiatrische Herzchirurgie. Der Benutzer fragt auf Deutsch, Sie müssen auf Deutsch antworten.
-                
-WICHTIGE ANFORDERUNGEN:
-1. SPRACHE: Antworten Sie AUSSCHLIESSLICH auf Deutsch. Verwenden Sie keine andere Sprache wie Englisch oder Chinesisch.
-2. INHALT: Professionell, präzise und prägnant
-3. HINWEIS: Diese Informationen dienen nur als Referenz und ersetzen keine ärztliche Beurteilung
-4. VERBOTEN: Bieten Sie keine Übersetzungen in andere Sprachen an
-5. FACHGEBIET: Konzentrieren Sie sich auf die pädiatrische Herzchirurgie
-
-Beispiel für eine korrekte Antwort:
-"Die Notwendigkeit einer Operation bei angeborenen Herzfehlern bei Kleinkindern hängt von mehreren Faktoren ab: der spezifischen Art des Defekts, seiner Schwere, den Symptomen des Kindes und dem allgemeinen Gesundheitszustand."
-
-Bitte antworten Sie jetzt auf Deutsch.`;
+                // 德语用户
+                systemPrompt = `Sie sind ein professioneller Assistent für pädiatrische Herzchirurgie. Der Benutzer fragt auf Deutsch, antworten Sie auf Deutsch. Hinweis: Nur Referenz, ersetzt keine medizinische Beurteilung.`;
                 targetLang = 'de';
-                userMessageWithLang = `${message} (WICHTIG: Antworten Sie ausschließlich auf Deutsch. Verwenden Sie keine andere Sprache.)`;
+                userMessageWithLang = `${message} (Bitte auf Deutsch antworten)`;
                 
             } else {
                 // 英语用户
-                systemPrompt = `You are a professional pediatric cardiac surgery assistant. The user asks in English, you must reply in English.
-                
-REQUIREMENTS:
-1. LANGUAGE: Reply in English only, do not use any other language
-2. CONTENT: Professional, accurate, concise
-3. REMINDER: This information is for reference only and does not replace medical judgment
-4. PROHIBITED: Do not provide translations in other languages
-5. SPECIALTY: Focus on pediatric cardiac surgery
-
-Please reply in English to the user's question now.`;
+                systemPrompt = `You are a professional pediatric cardiac surgery assistant. The user asks in English, reply in English. Note: For reference only, not a substitute for professional medical judgment.`;
                 targetLang = 'en';
-                userMessageWithLang = `${message} (IMPORTANT: Reply in English only. Do not use any other language.)`;
+                userMessageWithLang = `${message} (Please reply in English)`;
             }
 
             try {
@@ -860,22 +774,13 @@ Please reply in English to the user's question now.`;
                                 role: 'system',
                                 content: systemPrompt
                             },
-                            ...chatHistory.map(msg => {
-                                // 确保历史消息也符合当前语言要求
-                                if (msg.role === 'user') {
-                                    return {
-                                        role: 'user',
-                                        content: `${msg.content} (${targetLang === 'zh' ? '请用中文回答' : targetLang === 'de' ? 'Bitte auf Deutsch antworten' : 'Please reply in English'})`
-                                    };
-                                }
-                                return msg;
-                            }),
+                            ...chatHistory,
                             { 
                                 role: 'user', 
                                 content: userMessageWithLang
                             }
                         ],
-                        temperature: 0.1, // 非常低的temperature确保AI遵循指令
+                        temperature: 0.3,
                         max_tokens: 1000
                     })
                 });
@@ -968,8 +873,10 @@ Please reply in English to the user's question now.`;
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
             
-            // 检测消息语言
+            // 检测消息语言 - 这里要确保准确
             const msgLang = detectLanguage(text);
+            console.log('TTS语言检测:', msgLang, '文本:', text.substring(0, 50));
+            
             const langCode = msgLang.split('-')[0];
             const langBadge = {
                 'zh': '🇨🇳',
@@ -1001,7 +908,7 @@ Please reply in English to the user's question now.`;
             // 当前是否在朗读的标志（针对这条消息）
             let isThisMessageSpeaking = false;
             
-            // 朗读按钮点击事件
+            // 朗读按钮点击事件 - 确保使用正确的语言
             ttsBtn.onclick = () => {
                 if (isThisMessageSpeaking) {
                     // 如果正在朗读，点击停止
@@ -1014,8 +921,8 @@ Please reply in English to the user's question now.`;
                     // 如果未在朗读，先停止其他所有朗读
                     stopSpeaking();
                     
-                    // 开始朗读这条消息
-                    speakText(text);
+                    // 开始朗读这条消息，使用检测到的正确语言
+                    speakText(text, msgLang); // 明确传递检测到的语言
                     ttsBtn.innerHTML = '🔉' + langBadge;
                     ttsBtn.classList.add('speaking');
                     stopBtn.style.display = 'inline-flex';
@@ -1111,15 +1018,15 @@ Please reply in English to the user's question now.`;
             recognition.start();
         }
 
-        // 文字转语音 - 智能语言检测
-        function speakText(text) {
+        // 文字转语音 - 使用明确传递的语言
+        function speakText(text, forcedLang = null) {
             if (!text || !text.trim()) return;
             
             if (isCurrentlySpeaking) {
                 stopSpeaking();
             }
 
-            // 清理文本：移除emojis、星号、破折号等干扰符号
+            // 清理文本
             const cleanedText = cleanTextForSpeech(text);
             
             if (!cleanedText.trim()) {
@@ -1130,17 +1037,22 @@ Please reply in English to the user's question now.`;
             const utterance = new SpeechSynthesisUtterance(cleanedText);
             currentUtterance = utterance;
             
-            // 智能检测语言
-            const detectedLang = detectLanguage(cleanedText);
+            // 使用强制传递的语言，或者检测语言
+            let detectedLang = forcedLang;
+            if (!detectedLang) {
+                detectedLang = detectLanguage(cleanedText);
+            }
+            
+            console.log('TTS使用语言:', detectedLang);
             utterance.lang = detectedLang;
             
             // 根据语言调整语速
             if (detectedLang === 'de-DE') {
-                utterance.rate = 0.85; // 德语稍慢
+                utterance.rate = 0.85;
             } else if (detectedLang === 'en-US') {
-                utterance.rate = 0.9;  // 英语正常
+                utterance.rate = 0.9;
             } else {
-                utterance.rate = 0.9;  // 中文正常
+                utterance.rate = 0.9;
             }
             
             utterance.pitch = 1;
@@ -1148,7 +1060,7 @@ Please reply in English to the user's question now.`;
             
             // 朗读完成后的反馈
             utterance.onend = () => {
-                console.log('朗读完成:', detectedLang);
+                console.log('朗读完成，语言:', detectedLang);
                 isCurrentlySpeaking = false;
                 currentUtterance = null;
                 
@@ -1187,51 +1099,26 @@ Please reply in English to the user's question now.`;
             });
         }
 
-        // 清理文本用于语音播放（增强版）
+        // 清理文本用于语音播放
         function cleanTextForSpeech(text) {
             let cleaned = text;
             
-            // 步骤1: 移除Markdown格式符号
-            cleaned = cleaned.replace(/\*\*/g, '');          // 粗体标记 **text**
-            cleaned = cleaned.replace(/\*/g, '');            // 斜体标记 *text*
-            cleaned = cleaned.replace(/~~(.+?)~~/g, '$1');   // 删除线 ~~text~~
-            cleaned = cleaned.replace(/`([^`]+)`/g, '$1');   // 行内代码 `code`
-            cleaned = cleaned.replace(/```[\s\S]*?```/g, ''); // 代码块
-            cleaned = cleaned.replace(/#{1,6}\s*/g, '');     // 标题标记 # ## ###
-            cleaned = cleaned.replace(/^\s*[-*+]\s+/gm, ''); // 列表项 - * +
-            cleaned = cleaned.replace(/^\s*\d+\.\s+/gm, ''); // 数字列表 1. 2. 3.
-            cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // 链接 [text](url)
+            // 移除Markdown格式符号
+            cleaned = cleaned.replace(/\*\*/g, '');
+            cleaned = cleaned.replace(/\*/g, '');
+            cleaned = cleaned.replace(/~~(.+?)~~/g, '$1');
+            cleaned = cleaned.replace(/`([^`]+)`/g, '$1');
+            cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+            cleaned = cleaned.replace(/#{1,6}\s*/g, '');
+            cleaned = cleaned.replace(/^\s*[-*+]\s+/gm, '');
+            cleaned = cleaned.replace(/^\s*\d+\.\s+/gm, '');
+            cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
             
-            // 步骤2: 移除emoji（带保护）
-            try {
-                cleaned = cleaned.replace(/[\u{1F600}-\u{1F64F}]/gu, '');
-                cleaned = cleaned.replace(/[\u{1F300}-\u{1F5FF}]/gu, '');
-                cleaned = cleaned.replace(/[\u{1F680}-\u{1F6FF}]/gu, '');
-                cleaned = cleaned.replace(/[\u{1F900}-\u{1F9FF}]/gu, '');
-                cleaned = cleaned.replace(/[\u{2600}-\u{26FF}]/gu, '');
-                cleaned = cleaned.replace(/[\u{2700}-\u{27BF}]/gu, '');
-            } catch(e) {
-                console.log('Emoji清理跳过');
-            }
-            
-            // 步骤3: 移除其他特殊符号
-            cleaned = cleaned.replace(/——+/g, '，');         // 中文破折号转为逗号
-            cleaned = cleaned.replace(/--+/g, ' ');          // 英文破折号
-            cleaned = cleaned.replace(/—+/g, ' ');           // em破折号
-            cleaned = cleaned.replace(/_+/g, ' ');           // 下划线
-            cleaned = cleaned.replace(/[●○■□◆◇★☆▲△▼▽]/g, ''); // 特殊形状
-            cleaned = cleaned.replace(/[•·]/g, '');          // 项目符号
-            cleaned = cleaned.replace(/[「」『』【】《》〈〉]/g, ''); // 中文引号
-            
-            // 步骤4: 清理多余空格和换行
-            cleaned = cleaned.replace(/\n\s*\n/g, '。');     // 多个换行转为句号
-            cleaned = cleaned.replace(/\n/g, '，');          // 单个换行转为逗号
-            cleaned = cleaned.replace(/\s+/g, ' ');          // 多余空格
+            // 清理多余空格和换行
+            cleaned = cleaned.replace(/\n\s*\n/g, '。');
+            cleaned = cleaned.replace(/\n/g, '，');
+            cleaned = cleaned.replace(/\s+/g, ' ');
             cleaned = cleaned.trim();
-            
-            // 步骤5: 确保句子流畅
-            cleaned = cleaned.replace(/[,，]\s*[,，]/g, '，'); // 去除重复逗号
-            cleaned = cleaned.replace(/[.。]\s*[.。]/g, '。'); // 去除重复句号
             
             return cleaned;
         }
