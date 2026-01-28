@@ -1,0 +1,29 @@
+{
+  "name": "pediatric-cardiac-surgery-assistant",
+  "version": "1.0.0",
+  "description": "婴幼儿心外科智能辅助系统 - Pediatric Cardiac Surgery Assistant",
+  "main": "index.html",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'Static site - no build needed'",
+    "deploy": "netlify deploy --prod",
+    "start": "netlify dev"
+  },
+  "keywords": [
+    "pediatric",
+    "cardiac",
+    "surgery",
+    "medical",
+    "assistant",
+    "小儿心脏外科",
+    "婴幼儿心外科"
+  ],
+  "author": "刘菁 - 天津胸科医院心血管外科医师",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}
