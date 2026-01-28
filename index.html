@@ -509,7 +509,6 @@
             <button class="tab" onclick="switchTab(3)">🔗 参考资源</button>
         </div>
 
-        <!-- AI助手 -->
         <div class="tab-content active">
             <div class="chat-container">
                 <div class="chat-messages" id="chatMessages"></div>
@@ -530,7 +529,6 @@
             </div>
         </div>
 
-        <!-- 医学辞典 -->
         <div class="tab-content">
             <div class="dictionary-container">
                 <h2 style="margin-bottom: 20px;">医学术语翻译</h2>
@@ -549,7 +547,6 @@
             </div>
         </div>
 
-        <!-- 随访提醒 -->
         <div class="tab-content">
             <h2 style="margin-bottom: 20px;">患者随访管理</h2>
             <div class="reminder-form">
@@ -575,7 +572,6 @@
             <div class="reminder-list" id="reminderList"></div>
         </div>
 
-        <!-- 参考资源 -->
         <div class="tab-content">
             <h2 style="margin-bottom: 20px;">主要参考医疗机构</h2>
             <div class="resources">
@@ -738,15 +734,15 @@
             // 根据检测到的用户语言设置回复语言
             if (userLang === 'zh-CN') {
                 // 中文用户
-                systemPrompt = `你是专业的小儿心脏外科医生助手。用户用中文提问，请用中文简洁专业地回答。提醒：建议仅供参考，不能替代医生判断。`;
+                systemPrompt = `你是一位专业的小儿心脏外科医生助手。用户使用中文提问，请务必使用中文进行回复。回复应当专业且简洁。提醒：所有建议仅供参考，不能代替医生判断。`;
                 targetLang = 'zh';
                 userMessageWithLang = `${message}（请用中文回答）`;
                 
             } else if (userLang === 'de-DE') {
-                // 德语用户
-                systemPrompt = `Sie sind ein professioneller Assistent für pädiatrische Herzchirurgie. Der Benutzer fragt auf Deutsch, antworten Sie auf Deutsch. Hinweis: Nur Referenz, ersetzt keine medizinische Beurteilung.`;
+                // 德语用户 - 强化德语指令，防止退回英语
+                systemPrompt = `Sie sind ein hochqualifizierter Assistent für pädiatrische Herzchirurgie. Da der Benutzer auf Deutsch fragt, müssen Sie AUSSCHLIESSLICH auf Deutsch antworten. Erklären Sie medizinische Sachverhalte präzise. Hinweis: Alle Ratschläge dienen nur als Referenz und ersetzen keine ärztliche Beurteilung.`;
                 targetLang = 'de';
-                userMessageWithLang = `${message} (Bitte auf Deutsch antworten)`;
+                userMessageWithLang = `${message} (BITTE ANTWORTEN SIE NUR AUF DEUTSCH)`;
                 
             } else {
                 // 英语用户
@@ -1242,185 +1238,4 @@
             utterance.pitch = 1;
             utterance.volume = 1;
             
-            utterance.onend = () => {
-                isCurrentlySpeaking = false;
-                currentUtterance = null;
-            };
-            
-            utterance.onerror = () => {
-                isCurrentlySpeaking = false;
-                currentUtterance = null;
-            };
-            
-            synthesis.speak(utterance);
-            isCurrentlySpeaking = true;
-        }
-
-        // 翻译结果自动识别朗读
-        window.speakTranslationText = function(text) {
-            if (!text || !text.trim()) return;
-
-            if (isCurrentlySpeaking) {
-                stopSpeaking();
-            }
-
-            // 清理文本
-            const cleanedText = cleanTextForSpeech(text);
-            
-            if (!cleanedText.trim()) {
-                console.log('清理后文本为空，跳过朗读');
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(cleanedText);
-            currentUtterance = utterance;
-            
-            // 智能检测语言
-            const detectedLang = detectLanguage(cleanedText);
-            utterance.lang = detectedLang;
-            
-            // 根据语言调整语速
-            if (detectedLang === 'de-DE') {
-                utterance.rate = 0.85;
-            } else if (detectedLang === 'en-US') {
-                utterance.rate = 0.9;
-            } else {
-                utterance.rate = 0.9;
-            }
-            
-            utterance.pitch = 1;
-            utterance.volume = 1;
-            
-            utterance.onend = () => {
-                isCurrentlySpeaking = false;
-                currentUtterance = null;
-            };
-            
-            utterance.onerror = () => {
-                isCurrentlySpeaking = false;
-                currentUtterance = null;
-            };
-            
-            synthesis.speak(utterance);
-            isCurrentlySpeaking = true;
-        }
-
-        // 随访提醒功能
-        window.addReminder = function() {
-            const patientName = document.getElementById('patientName').value.trim();
-            const surgeryType = document.getElementById('surgeryType').value.trim();
-            const followupDate = document.getElementById('followupDate').value;
-            const notes = document.getElementById('notes').value.trim();
-
-            if (!patientName || !surgeryType || !followupDate) {
-                alert('请填写所有必填字段');
-                return;
-            }
-
-            const reminder = {
-                id: Date.now(),
-                patientName,
-                surgeryType,
-                followupDate,
-                notes,
-                createdAt: new Date().toISOString()
-            };
-
-            reminders.push(reminder);
-            localStorage.setItem('reminders', JSON.stringify(reminders));
-
-            // 清空表单
-            document.getElementById('patientName').value = '';
-            document.getElementById('surgeryType').value = '';
-            document.getElementById('followupDate').value = '';
-            document.getElementById('notes').value = '';
-
-            displayReminders();
-            alert('随访提醒已添加');
-        }
-
-        function displayReminders() {
-            const listDiv = document.getElementById('reminderList');
-            const today = new Date().toISOString().split('T')[0];
-
-            if (reminders.length === 0) {
-                listDiv.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 40px;">暂无随访提醒</p>';
-                return;
-            }
-
-            // 按日期排序
-            reminders.sort((a, b) => new Date(a.followupDate) - new Date(b.followupDate));
-
-            listDiv.innerHTML = reminders.map(reminder => {
-                const followupDate = new Date(reminder.followupDate);
-                const isPast = reminder.followupDate < today;
-                const isUpcoming = !isPast && (new Date(reminder.followupDate) - new Date(today)) / (1000 * 60 * 60 * 24) <= 7;
-                const statusClass = isPast ? 'overdue' : isUpcoming ? 'upcoming' : '';
-
-                return `
-                    <div class="reminder-item ${statusClass}">
-                        <div>
-                            <strong>${reminder.patientName}</strong> - ${reminder.surgeryType}<br>
-                            <small>📅 随访日期: ${reminder.followupDate}</small><br>
-                            ${reminder.notes ? `<small>📝 ${reminder.notes}</small>` : ''}
-                        </div>
-                        <button class="btn btn-secondary" style="padding: 8px 16px;" onclick="deleteReminder(${reminder.id})">删除</button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        window.deleteReminder = function(id) {
-            if (confirm('确定要删除此提醒吗？')) {
-                reminders = reminders.filter(r => r.id !== id);
-                localStorage.setItem('reminders', JSON.stringify(reminders));
-                displayReminders();
-            }
-        }
-
-        // 初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            // 添加欢迎消息
-            const welcomeMsg = `您好！我是小儿心脏外科智能助手。我可以帮您解答专业问题、提供参考信息。
-            
-支持语言：
-🇨🇳 中文 - 请用中文提问，我将用中文回复
-🇺🇸 English - Ask in English, I'll reply in English
-🇩🇪 Deutsch - Fragen Sie auf Deutsch, ich antworte auf Deutsch
-
-语音功能：
-• 点击🎤按钮可使用语音输入提问
-• 点击消息旁的🔊按钮可朗读该条消息
-• 点击⏹️按钮可停止当前朗读
-• 点击底部的🔇按钮可停止所有朗读
-
-请注意，所有建议仅供参考，实际诊疗需结合患儿具体情况由医生判断。`;
-            
-            addMessage(welcomeMsg, 'assistant');
-            
-            // 加载随访提醒
-            displayReminders();
-            
-            // 请求通知权限
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission();
-            }
-        });
-
-        // 检查到期提醒
-        setInterval(() => {
-            const today = new Date().toISOString().split('T')[0];
-            const dueReminders = reminders.filter(r => r.followupDate === today);
-            
-            if (dueReminders.length > 0 && Notification.permission === 'granted') {
-                dueReminders.forEach(reminder => {
-                    new Notification('随访提醒', {
-                        body: `患者 ${reminder.patientName} 今日需要随访 (${reminder.surgeryType})`,
-                        icon: '🫀'
-                    });
-                });
-            }
-        }, 60000); // 每分钟检查一次
-    </script>
-</body>
-</html>
+            utterance.on
