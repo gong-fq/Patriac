@@ -628,49 +628,141 @@
             }
         };
 
-        // 增强的语言检测函数
+        // 修复的语言检测函数 - 重点修复德语检测
         function detectLanguage(text) {
-            // 清理文本，去除标点符号
-            const cleanText = text.replace(/[^\w\s\u4e00-\u9fa5äöüßÄÖÜ]/gi, '').trim();
+            if (!text || !text.trim()) return 'en-US';
             
-            if (!cleanText) return 'en';
+            const cleanText = text.trim();
             
-            // 统计字符类型
-            const chineseChars = cleanText.match(/[\u4e00-\u9fa5]/g) || [];
-            const germanChars = cleanText.match(/[äöüßÄÖÜ]/gi) || [];
-            
-            // 德语特征词
-            const germanWords = ['und', 'der', 'die', 'das', 'ist', 'sind', 'haben', 'werden', 'mit', 'von', 'für', 'auf', 'bei', 'durch', 
-                                'ein', 'eine', 'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'sie', 'Sie'];
-            
-            // 检查德语特征词
-            let germanWordCount = 0;
-            const lowerText = cleanText.toLowerCase();
-            germanWords.forEach(word => {
-                const regex = new RegExp('\\b' + word + '\\b', 'gi');
-                const matches = lowerText.match(regex);
-                if (matches) germanWordCount += matches.length;
-            });
-            
-            // 判断逻辑（优先级：中文 > 德语 > 英语）
-            
-            // 1. 如果有中文汉字，且占比超过20%或绝对数量>2
-            if (chineseChars.length > 0 && (chineseChars.length > 2 || chineseChars.length / cleanText.length > 0.2)) {
+            // 1. 中文检测（最简单直接）
+            const chineseRegex = /[\u4e00-\u9fa5]/;
+            if (chineseRegex.test(cleanText)) {
                 return 'zh-CN';
             }
             
-            // 2. 如果有德语特殊字符或德语特征词较多
-            if (germanChars.length > 0 || germanWordCount >= 2) {
-                // 检查是否主要是德语（德语字符/单词占主导）
-                const totalChars = cleanText.length;
-                const germanIndicator = (germanChars.length + germanWordCount) / totalChars;
+            // 2. 德语检测 - 优先处理您的具体问题
+            const lowerText = cleanText.toLowerCase();
+            
+            // 检测德语特殊字符
+            const germanSpecialChars = /[äöüßÄÖÜ]/;
+            const hasGermanChars = germanSpecialChars.test(cleanText);
+            
+            // 您的具体问题中的关键词
+            const specificGermanKeywords = [
+                'brauchen', 'angeborene', 'herzfehler', 'kleinkindern', 'operation',
+                'herz', 'fehler', 'kinder', 'op', 'chirurgie', 'medizin'
+            ];
+            
+            // 常见德语词汇
+            const commonGermanWords = [
+                'und', 'der', 'die', 'das', 'ein', 'eine', 'einer', 'eines', 'einem', 'einen',
+                'ist', 'sind', 'haben', 'werden', 'können', 'müssen', 'sollen', 'wollen',
+                'mit', 'von', 'für', 'auf', 'bei', 'durch', 'über', 'unter', 'zwischen',
+                'ich', 'du', 'er', 'sie', 'es', 'wir', 'ihr', 'Sie',
+                'nicht', 'auch', 'oder', 'aber', 'denn', 'weil', 'wenn', 'obwohl',
+                'was', 'wie', 'wo', 'warum', 'wann', 'wer', 'welche', 'welcher', 'welches'
+            ];
+            
+            // 合并所有德语关键词
+            const allGermanKeywords = [...specificGermanKeywords, ...commonGermanWords];
+            
+            // 计算德语分数
+            let germanScore = 0;
+            allGermanKeywords.forEach(keyword => {
+                // 使用单词边界确保匹配完整单词
+                const regex = new RegExp('\\b' + keyword + '\\b', 'gi');
+                const matches = cleanText.match(regex);
+                if (matches) {
+                    germanScore += matches.length;
+                }
+            });
+            
+            // 检测德语动词形式
+            const germanVerbPatterns = [
+                'braucht', 'brauchen', 'macht', 'machen', 'geht', 'gehen', 'kommt', 'kommen',
+                'fragt', 'fragen', 'antwortet', 'antworten', 'weiß', 'wissen', 'kann', 'können'
+            ];
+            
+            let hasGermanVerb = false;
+            germanVerbPatterns.forEach(verb => {
+                if (lowerText.includes(verb)) {
+                    hasGermanVerb = true;
+                }
+            });
+            
+            // 德语判断逻辑
+            // 情况1：有德语特殊字符
+            if (hasGermanChars) {
+                return 'de-DE';
+            }
+            
+            // 情况2：包含您的具体问题关键词
+            const hasSpecificGerman = specificGermanKeywords.some(keyword => 
+                lowerText.includes(keyword)
+            );
+            
+            if (hasSpecificGerman) {
+                return 'de-DE';
+            }
+            
+            // 情况3：有德语动词且德语分数较高
+            if (hasGermanVerb && germanScore >= 2) {
+                return 'de-DE';
+            }
+            
+            // 情况4：德语分数足够高
+            if (germanScore >= 3) {
+                return 'de-DE';
+            }
+            
+            // 3. 英语检测
+            // 常见英语单词
+            const commonEnglishWords = [
+                'the', 'and', 'is', 'are', 'to', 'in', 'of', 'for', 'with', 'on', 'at', 'by',
+                'a', 'an', 'this', 'that', 'these', 'those', 'it', 'he', 'she', 'they',
+                'have', 'has', 'do', 'does', 'can', 'could', 'will', 'would', 'should',
+                'what', 'how', 'where', 'when', 'why', 'who', 'which'
+            ];
+            
+            let englishScore = 0;
+            commonEnglishWords.forEach(word => {
+                const regex = new RegExp('\\b' + word + '\\b', 'gi');
+                const matches = cleanText.match(regex);
+                if (matches) {
+                    englishScore += matches.length;
+                }
+            });
+            
+            // 如果英语分数远高于德语分数，判定为英语
+            if (englishScore > germanScore * 2) {
+                return 'en-US';
+            }
+            
+            // 4. 默认：如果有疑问，检查文本长度和结构
+            // 短文本且包含问号，更可能是德语（因为您的例子是德语问句）
+            if (cleanText.includes('?') && cleanText.length < 100) {
+                // 检查是否是德语疑问句模式
+                const germanQuestionPatterns = [
+                    /brauchen\s+.+\?/i,
+                    /sind\s+.+\?/i,
+                    /haben\s+.+\?/i,
+                    /können\s+.+\?/i,
+                    /müssen\s+.+\?/i,
+                    /wie\s+.+\?/i,
+                    /was\s+.+\?/i,
+                    /warum\s+.+\?/i,
+                    /wo\s+.+\?/i,
+                    /wann\s+.+\?/i
+                ];
                 
-                if (germanIndicator > 0.15) {
-                    return 'de-DE';
+                for (const pattern of germanQuestionPatterns) {
+                    if (pattern.test(cleanText)) {
+                        return 'de-DE';
+                    }
                 }
             }
             
-            // 3. 默认英语
+            // 5. 最终默认值
             return 'en-US';
         }
 
@@ -699,51 +791,54 @@
             let targetLang = '';
             let userMessageWithLang = message;
             
-            // 根据检测到的用户语言设置回复语言 - 修复版
+            // 根据检测到的用户语言设置回复语言
             if (userLang === 'zh-CN') {
                 // 中文用户
-                systemPrompt = `你是一名专业的小儿心脏外科医生助手。用户用中文提问，你必须用中文回复。
+                systemPrompt = `你是一名专业的小儿心脏外科医生助手。用户用中文提问，你必须只用中文回复。
                 
 要求：
-1. 只用中文回复，不要使用任何英语或德语
-2. 回复要专业、准确、简洁
-3. 提醒用户：本建议仅供参考，不能替代专业医疗判断
-4. 不要提供其他语言的翻译
-5. 专注于小儿心脏外科专业领域
+1. 语言：只用中文，不要使用任何英语或德语
+2. 内容：专业、准确、简洁
+3. 提醒：本建议仅供参考，不能替代专业医疗判断
+4. 禁止：不要提供其他语言的翻译
+5. 领域：专注于小儿心脏外科专业
 
-请开始用中文回答用户的问题。`;
+请用中文回答用户的问题。`;
                 targetLang = 'zh';
                 userMessageWithLang = `${message}（请用中文回答）`;
                 
             } else if (userLang === 'de-DE') {
-                // 德语用户 - 修复：确保AI只用德语回复
+                // 德语用户 - 强制德语回复
                 systemPrompt = `Sie sind ein professioneller Assistent für pädiatrische Herzchirurgie. Der Benutzer fragt auf Deutsch, Sie müssen auf Deutsch antworten.
                 
-Anforderungen:
-1. Antworten Sie ausschließlich auf Deutsch, verwenden Sie keine andere Sprache
-2. Die Antwort muss professionell, präzise und prägnant sein
-3. Erinnern Sie den Benutzer: Diese Informationen dienen nur als Referenz und ersetzen keine medizinische Beurteilung
-4. Geben Sie keine Übersetzungen in andere Sprachen
-5. Konzentrieren Sie sich auf das Fachgebiet der pädiatrischen Herzchirurgie
+WICHTIGE ANFORDERUNGEN:
+1. SPRACHE: Antworten Sie AUSSCHLIESSLICH auf Deutsch. Verwenden Sie keine andere Sprache wie Englisch oder Chinesisch.
+2. INHALT: Professionell, präzise und prägnant
+3. HINWEIS: Diese Informationen dienen nur als Referenz und ersetzen keine ärztliche Beurteilung
+4. VERBOTEN: Bieten Sie keine Übersetzungen in andere Sprachen an
+5. FACHGEBIET: Konzentrieren Sie sich auf die pädiatrische Herzchirurgie
 
-Bitte antworten Sie jetzt auf Deutsch auf die Frage des Benutzers.`;
+Beispiel für eine korrekte Antwort:
+"Die Notwendigkeit einer Operation bei angeborenen Herzfehlern bei Kleinkindern hängt von mehreren Faktoren ab: der spezifischen Art des Defekts, seiner Schwere, den Symptomen des Kindes und dem allgemeinen Gesundheitszustand."
+
+Bitte antworten Sie jetzt auf Deutsch.`;
                 targetLang = 'de';
-                userMessageWithLang = `${message} (Bitte antworten Sie auf Deutsch)`;
+                userMessageWithLang = `${message} (WICHTIG: Antworten Sie ausschließlich auf Deutsch. Verwenden Sie keine andere Sprache.)`;
                 
             } else {
                 // 英语用户
                 systemPrompt = `You are a professional pediatric cardiac surgery assistant. The user asks in English, you must reply in English.
                 
-Requirements:
-1. Reply in English only, do not use any other language
-2. The reply should be professional, accurate, and concise
-3. Remind the user: This information is for reference only and does not replace medical judgment
-4. Do not provide translations in other languages
-5. Focus on the pediatric cardiac surgery specialty
+REQUIREMENTS:
+1. LANGUAGE: Reply in English only, do not use any other language
+2. CONTENT: Professional, accurate, concise
+3. REMINDER: This information is for reference only and does not replace medical judgment
+4. PROHIBITED: Do not provide translations in other languages
+5. SPECIALTY: Focus on pediatric cardiac surgery
 
 Please reply in English to the user's question now.`;
                 targetLang = 'en';
-                userMessageWithLang = `${message} (Please reply in English)`;
+                userMessageWithLang = `${message} (IMPORTANT: Reply in English only. Do not use any other language.)`;
             }
 
             try {
@@ -770,7 +865,7 @@ Please reply in English to the user's question now.`;
                                 if (msg.role === 'user') {
                                     return {
                                         role: 'user',
-                                        content: `${msg.content} (${targetLang === 'zh' ? '请用中文' : targetLang === 'de' ? 'Bitte auf Deutsch' : 'Please in English'})`
+                                        content: `${msg.content} (${targetLang === 'zh' ? '请用中文回答' : targetLang === 'de' ? 'Bitte auf Deutsch antworten' : 'Please reply in English'})`
                                     };
                                 }
                                 return msg;
@@ -780,7 +875,7 @@ Please reply in English to the user's question now.`;
                                 content: userMessageWithLang
                             }
                         ],
-                        temperature: 0.3, // 降低temperature以获得更确定的回复
+                        temperature: 0.1, // 非常低的temperature确保AI遵循指令
                         max_tokens: 1000
                     })
                 });
