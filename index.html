@@ -428,18 +428,62 @@
             margin: 10px 0;
         }
 
-        .lang-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7em;
-            margin-left: 8px;
-            vertical-align: middle;
+        /* TTS按钮样式改进 */
+        .tts-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            opacity: 0.7;
+            transition: all 0.3s;
+            padding: 4px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .lang-badge.zh { background: #ff4d4d; color: white; }
-        .lang-badge.en { background: #4d79ff; color: white; }
-        .lang-badge.de { background: #4dff88; color: #333; }
+        .tts-button:hover {
+            opacity: 1;
+            background-color: #f0f0f0;
+        }
+
+        .tts-button.speaking {
+            opacity: 1;
+            background-color: #e3f2fd;
+        }
+
+        .stop-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            opacity: 0.7;
+            transition: all 0.3s;
+            padding: 4px;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stop-button:hover {
+            opacity: 1;
+            background-color: #ffebee;
+        }
+
+        /* 消息中的TTS容器 */
+        .tts-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -476,10 +520,11 @@
             </div>
             <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
                 <div style="color: #6c757d; font-size: 0.9em;">
-                    💡 提示：支持中文、英文、德语提问和回复，每条消息都可点击🔊按钮朗读（自动识别语言）
+                    💡 提示：支持中文、英文、德语提问和回复<br>
+                    🎤 语音输入提问 | 🔊 点击消息按钮朗读 | ⏹️ 停止当前朗读
                 </div>
                 <button onclick="stopSpeaking()" class="btn btn-secondary" style="padding: 8px 16px;">
-                    🔇 停止朗读
+                    🔇 停止所有朗读
                 </button>
             </div>
         </div>
@@ -562,6 +607,8 @@
         let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
         let recognition = null;
         let synthesis = window.speechSynthesis;
+        let isCurrentlySpeaking = false;
+        let currentUtterance = null;
 
         // 标签切换
         window.switchTab = function(index) {
@@ -591,7 +638,6 @@
             // 统计字符类型
             const chineseChars = cleanText.match(/[\u4e00-\u9fa5]/g) || [];
             const germanChars = cleanText.match(/[äöüßÄÖÜ]/gi) || [];
-            const englishChars = cleanText.match(/[a-zA-Z]/g) || [];
             
             // 德语特征词
             const germanWords = ['und', 'der', 'die', 'das', 'ist', 'sind', 'haben', 'werden', 'mit', 'von', 'für', 'auf', 'bei', 'durch', 
@@ -711,7 +757,8 @@
                 chatHistory.push({ role: 'user', content: message });
                 chatHistory.push({ role: 'assistant', content: reply });
 
-                addMessage(reply, 'assistant', true);
+                // 不自动朗读，只显示消息
+                addMessage(reply, 'assistant');
             } catch (error) {
                 console.error('完整错误信息:', error);
                 removeThinkingAnimation(thinkingId);
@@ -770,7 +817,7 @@
             }
         }
 
-        function addMessage(text, sender, enableTTS = false) {
+        function addMessage(text, sender) {
             const messagesDiv = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
@@ -784,33 +831,93 @@
                 'en': '🇺🇸'
             }[langCode] || '';
             
-            // 为所有消息添加TTS功能
+            // 为消息添加TTS功能
             const textSpan = document.createElement('span');
             textSpan.textContent = text;
             
+            // 创建TTS按钮容器
+            const ttsContainer = document.createElement('div');
+            ttsContainer.className = 'tts-container';
+            
+            // 创建朗读按钮
             const ttsBtn = document.createElement('button');
+            ttsBtn.className = 'tts-button';
             ttsBtn.innerHTML = '🔊' + langBadge;
-            ttsBtn.style.cssText = 'margin-left: 10px; background: none; border: none; cursor: pointer; font-size: 1.2em; opacity: 0.7; transition: opacity 0.3s;';
             ttsBtn.title = '点击朗读（' + msgLang + '）';
-            ttsBtn.onmouseover = () => ttsBtn.style.opacity = '1';
-            ttsBtn.onmouseout = () => ttsBtn.style.opacity = '0.7';
+            
+            // 创建停止按钮
+            const stopBtn = document.createElement('button');
+            stopBtn.className = 'stop-button';
+            stopBtn.innerHTML = '⏹️';
+            stopBtn.title = '停止朗读';
+            stopBtn.style.display = 'none';
+            
+            // 当前是否在朗读的标志（针对这条消息）
+            let isThisMessageSpeaking = false;
+            
+            // 朗读按钮点击事件
             ttsBtn.onclick = () => {
-                speakText(text);
-                // 视觉反馈
-                ttsBtn.innerHTML = '🔉' + langBadge;
-                setTimeout(() => ttsBtn.innerHTML = '🔊' + langBadge, 300);
+                if (isThisMessageSpeaking) {
+                    // 如果正在朗读，点击停止
+                    stopSpeaking();
+                    ttsBtn.innerHTML = '🔊' + langBadge;
+                    ttsBtn.classList.remove('speaking');
+                    stopBtn.style.display = 'none';
+                    isThisMessageSpeaking = false;
+                } else {
+                    // 如果未在朗读，先停止其他所有朗读
+                    stopSpeaking();
+                    
+                    // 开始朗读这条消息
+                    speakText(text);
+                    ttsBtn.innerHTML = '🔉' + langBadge;
+                    ttsBtn.classList.add('speaking');
+                    stopBtn.style.display = 'inline-flex';
+                    isThisMessageSpeaking = true;
+                    
+                    // 监听朗读结束事件
+                    if (currentUtterance) {
+                        currentUtterance.onend = () => {
+                            ttsBtn.innerHTML = '🔊' + langBadge;
+                            ttsBtn.classList.remove('speaking');
+                            stopBtn.style.display = 'none';
+                            isThisMessageSpeaking = false;
+                            isCurrentlySpeaking = false;
+                            currentUtterance = null;
+                        };
+                        
+                        currentUtterance.onerror = () => {
+                            ttsBtn.innerHTML = '🔊' + langBadge;
+                            ttsBtn.classList.remove('speaking');
+                            stopBtn.style.display = 'none';
+                            isThisMessageSpeaking = false;
+                            isCurrentlySpeaking = false;
+                            currentUtterance = null;
+                        };
+                    }
+                }
             };
             
+            // 停止按钮点击事件
+            stopBtn.onclick = () => {
+                stopSpeaking();
+                ttsBtn.innerHTML = '🔊' + langBadge;
+                ttsBtn.classList.remove('speaking');
+                stopBtn.style.display = 'none';
+                isThisMessageSpeaking = false;
+            };
+            
+            // 组装组件
+            ttsContainer.appendChild(ttsBtn);
+            ttsContainer.appendChild(stopBtn);
+            
             messageDiv.appendChild(textSpan);
-            messageDiv.appendChild(ttsBtn);
+            if (sender === 'assistant') {
+                messageDiv.appendChild(ttsContainer);
+            }
             
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            
-            // 自动朗读AI回复
-            if (sender === 'assistant' && enableTTS) {
-                setTimeout(() => speakText(text), 500);
-            }
         }
 
         window.handleKeyPress = function(event) {
@@ -862,8 +969,8 @@
         function speakText(text) {
             if (!text || !text.trim()) return;
             
-            if (synthesis.speaking) {
-                synthesis.cancel();
+            if (isCurrentlySpeaking) {
+                stopSpeaking();
             }
 
             // 清理文本：移除emojis、星号、破折号等干扰符号
@@ -875,6 +982,7 @@
             }
 
             const utterance = new SpeechSynthesisUtterance(cleanedText);
+            currentUtterance = utterance;
             
             // 智能检测语言
             const detectedLang = detectLanguage(cleanedText);
@@ -895,13 +1003,42 @@
             // 朗读完成后的反馈
             utterance.onend = () => {
                 console.log('朗读完成:', detectedLang);
+                isCurrentlySpeaking = false;
+                currentUtterance = null;
+                
+                // 重置所有TTS按钮状态
+                resetAllTTSButtons();
             };
             
             utterance.onerror = (event) => {
                 console.error('朗读出错:', event);
+                isCurrentlySpeaking = false;
+                currentUtterance = null;
+                
+                // 出错时也重置按钮状态
+                resetAllTTSButtons();
             };
             
             synthesis.speak(utterance);
+            isCurrentlySpeaking = true;
+        }
+
+        // 重置所有TTS按钮状态
+        function resetAllTTSButtons() {
+            const ttsButtons = document.querySelectorAll('.tts-button');
+            ttsButtons.forEach(btn => {
+                const originalHtml = btn.innerHTML;
+                if (originalHtml.includes('🔉')) {
+                    const langBadge = originalHtml.replace('🔉', '').trim();
+                    btn.innerHTML = '🔊' + langBadge;
+                    btn.classList.remove('speaking');
+                }
+            });
+            
+            const stopButtons = document.querySelectorAll('.stop-button');
+            stopButtons.forEach(btn => {
+                btn.style.display = 'none';
+            });
         }
 
         // 清理文本用于语音播放（增强版）
@@ -959,6 +1096,12 @@
                 synthesis.cancel();
                 console.log('已停止朗读');
             }
+            
+            isCurrentlySpeaking = false;
+            currentUtterance = null;
+            
+            // 重置所有TTS按钮状态
+            resetAllTTSButtons();
         }
 
         // 医学辞典功能
@@ -1009,7 +1152,7 @@
                         <h3>📖 翻译结果</h3>
                         <div style="white-space: pre-wrap; line-height: 1.8; padding: 10px; background: white; border-radius: 5px;" id="translationText">${translation}</div>
                         <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button onclick="speakText('${translation.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="padding: 8px 16px;">
+                            <button onclick="speakTranslationText('${translation.replace(/'/g, "\\'")}')" class="btn btn-secondary" style="padding: 8px 16px;">
                                 🔊 自动识别朗读
                             </button>
                             <button onclick="speakTranslation('zh-CN')" class="btn btn-secondary" style="padding: 8px 16px;">
@@ -1038,8 +1181,8 @@
             const text = translationDiv.textContent;
             if (!text.trim()) return;
 
-            if (synthesis.speaking) {
-                synthesis.cancel();
+            if (isCurrentlySpeaking) {
+                stopSpeaking();
             }
 
             // 清理文本
@@ -1051,6 +1194,7 @@
             }
 
             const utterance = new SpeechSynthesisUtterance(cleanedText);
+            currentUtterance = utterance;
             utterance.lang = lang;
             
             // 根据语言调整语速
@@ -1065,7 +1209,67 @@
             utterance.pitch = 1;
             utterance.volume = 1;
             
+            utterance.onend = () => {
+                isCurrentlySpeaking = false;
+                currentUtterance = null;
+            };
+            
+            utterance.onerror = () => {
+                isCurrentlySpeaking = false;
+                currentUtterance = null;
+            };
+            
             synthesis.speak(utterance);
+            isCurrentlySpeaking = true;
+        }
+
+        // 翻译结果自动识别朗读
+        window.speakTranslationText = function(text) {
+            if (!text || !text.trim()) return;
+
+            if (isCurrentlySpeaking) {
+                stopSpeaking();
+            }
+
+            // 清理文本
+            const cleanedText = cleanTextForSpeech(text);
+            
+            if (!cleanedText.trim()) {
+                console.log('清理后文本为空，跳过朗读');
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(cleanedText);
+            currentUtterance = utterance;
+            
+            // 智能检测语言
+            const detectedLang = detectLanguage(cleanedText);
+            utterance.lang = detectedLang;
+            
+            // 根据语言调整语速
+            if (detectedLang === 'de-DE') {
+                utterance.rate = 0.85;
+            } else if (detectedLang === 'en-US') {
+                utterance.rate = 0.9;
+            } else {
+                utterance.rate = 0.9;
+            }
+            
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            
+            utterance.onend = () => {
+                isCurrentlySpeaking = false;
+                currentUtterance = null;
+            };
+            
+            utterance.onerror = () => {
+                isCurrentlySpeaking = false;
+                currentUtterance = null;
+            };
+            
+            synthesis.speak(utterance);
+            isCurrentlySpeaking = true;
         }
 
         // 随访提醒功能
@@ -1150,6 +1354,12 @@
 🇨🇳 中文 - 请用中文提问，我将用中文回复
 🇺🇸 English - Ask in English, I'll reply in English
 🇩🇪 Deutsch - Fragen Sie auf Deutsch, ich antworte auf Deutsch
+
+语音功能：
+• 点击🎤按钮可使用语音输入提问
+• 点击消息旁的🔊按钮可朗读该条消息
+• 点击⏹️按钮可停止当前朗读
+• 点击底部的🔇按钮可停止所有朗读
 
 请注意，所有建议仅供参考，实际诊疗需结合患儿具体情况由医生判断。`;
             
