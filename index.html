@@ -674,7 +674,7 @@
             return 'en-US';
         }
 
-        // AI助手功能
+        // AI助手功能 - 修复语言匹配问题
         window.sendMessage = async function() {
             const input = document.getElementById('chatInput');
             const message = input.value.trim();
@@ -693,25 +693,63 @@
 
             // 检测用户提问的语言
             const userLang = detectLanguage(message);
+            console.log('检测到的用户语言:', userLang, '消息:', message);
+            
             let systemPrompt = '';
             let targetLang = '';
+            let userMessageWithLang = message;
             
-            // 根据检测到的用户语言设置回复语言
+            // 根据检测到的用户语言设置回复语言 - 修复版
             if (userLang === 'zh-CN') {
-                systemPrompt = '你是专业的小儿心脏外科医疗助手。请用中文简洁专业地回答。提醒：建议仅供参考，不能替代医生判断。';
-                targetLang = '请用中文回复';
+                // 中文用户
+                systemPrompt = `你是一名专业的小儿心脏外科医生助手。用户用中文提问，你必须用中文回复。
+                
+要求：
+1. 只用中文回复，不要使用任何英语或德语
+2. 回复要专业、准确、简洁
+3. 提醒用户：本建议仅供参考，不能替代专业医疗判断
+4. 不要提供其他语言的翻译
+5. 专注于小儿心脏外科专业领域
+
+请开始用中文回答用户的问题。`;
+                targetLang = 'zh';
+                userMessageWithLang = `${message}（请用中文回答）`;
+                
             } else if (userLang === 'de-DE') {
-                systemPrompt = 'Sie sind ein professioneller Assistent für pädiatrische Herzchirurgie. Antworten Sie präzise auf Deutsch. Hinweis: Nur Referenz, ersetzt keine medizinische Beurteilung.';
-                targetLang = 'Bitte antworten Sie auf Deutsch';
+                // 德语用户 - 修复：确保AI只用德语回复
+                systemPrompt = `Sie sind ein professioneller Assistent für pädiatrische Herzchirurgie. Der Benutzer fragt auf Deutsch, Sie müssen auf Deutsch antworten.
+                
+Anforderungen:
+1. Antworten Sie ausschließlich auf Deutsch, verwenden Sie keine andere Sprache
+2. Die Antwort muss professionell, präzise und prägnant sein
+3. Erinnern Sie den Benutzer: Diese Informationen dienen nur als Referenz und ersetzen keine medizinische Beurteilung
+4. Geben Sie keine Übersetzungen in andere Sprachen
+5. Konzentrieren Sie sich auf das Fachgebiet der pädiatrischen Herzchirurgie
+
+Bitte antworten Sie jetzt auf Deutsch auf die Frage des Benutzers.`;
+                targetLang = 'de';
+                userMessageWithLang = `${message} (Bitte antworten Sie auf Deutsch)`;
+                
             } else {
-                systemPrompt = 'You are a professional pediatric cardiac surgery assistant. Answer concisely in English. Note: For reference only, not a substitute for professional medical judgment.';
-                targetLang = 'Please reply in English';
+                // 英语用户
+                systemPrompt = `You are a professional pediatric cardiac surgery assistant. The user asks in English, you must reply in English.
+                
+Requirements:
+1. Reply in English only, do not use any other language
+2. The reply should be professional, accurate, and concise
+3. Remind the user: This information is for reference only and does not replace medical judgment
+4. Do not provide translations in other languages
+5. Focus on the pediatric cardiac surgery specialty
+
+Please reply in English to the user's question now.`;
+                targetLang = 'en';
+                userMessageWithLang = `${message} (Please reply in English)`;
             }
 
             try {
                 console.log('发送请求到AI服务...', {
                     userLang: userLang,
-                    systemPrompt: systemPrompt,
+                    targetLang: targetLang,
                     message: message
                 });
 
@@ -727,13 +765,22 @@
                                 role: 'system',
                                 content: systemPrompt
                             },
-                            ...chatHistory,
+                            ...chatHistory.map(msg => {
+                                // 确保历史消息也符合当前语言要求
+                                if (msg.role === 'user') {
+                                    return {
+                                        role: 'user',
+                                        content: `${msg.content} (${targetLang === 'zh' ? '请用中文' : targetLang === 'de' ? 'Bitte auf Deutsch' : 'Please in English'})`
+                                    };
+                                }
+                                return msg;
+                            }),
                             { 
                                 role: 'user', 
-                                content: `${message} ${targetLang}` // 明确指定回复语言
+                                content: userMessageWithLang
                             }
                         ],
-                        temperature: 0.5,
+                        temperature: 0.3, // 降低temperature以获得更确定的回复
                         max_tokens: 1000
                     })
                 });
@@ -753,6 +800,10 @@
                 console.log('API响应数据:', data);
                 
                 const reply = data.choices[0].message.content;
+                
+                // 检查回复是否使用了正确的语言
+                const replyLang = detectLanguage(reply);
+                console.log('AI回复语言检测:', replyLang);
                 
                 chatHistory.push({ role: 'user', content: message });
                 chatHistory.push({ role: 'assistant', content: reply });
